@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
@@ -121,8 +121,7 @@
             overflow: hidden; 
         }
         .modal#productDetailModal,
-        .modal#signupMobileModal, 
-        .modal#otpVerificationModal { 
+        .modal#authModal { 
             bottom: 0; 
         }
 
@@ -133,11 +132,9 @@
             border-radius: 0; box-shadow: none;
         }
         #settingsModal .modal-content,
-        #signupMobileModal .modal-content, 
-        #otpVerificationModal .modal-content { 
+        #authModal .modal-content { 
             background-color: var(--background-color); 
         }
-
 
         @keyframes slideUp { 
             from { transform: translateY(100%); opacity: 0.7; } 
@@ -169,8 +166,7 @@
         }
         #myOrdersModal .modal-header .modal-title,
         #settingsModal .modal-header .modal-title,
-        #signupMobileModal .modal-header .modal-title,
-        #otpVerificationModal .modal-header .modal-title {
+        #authModal .modal-header .modal-title { 
         }
         
         .modal-body { 
@@ -180,9 +176,14 @@
         #modal-product-info { background-color: var(--card-background-default); }
         #orderFormModal .modal-body, 
         #myOrdersModal .modal-body,
-        #signupMobileModal .modal-body, 
-        #otpVerificationModal .modal-body { 
+        #authModal .modal-body { 
             padding: 20px; 
+        }
+        #authModal .modal-body .auth-divider {
+            text-align: center;
+            margin: 15px 0;
+            color: var(--text-color-secondary);
+            font-size: 0.9rem;
         }
         #myOrdersModal .modal-body { display: flex; flex-direction: column; }
         #myOrdersModal .modal-body .no-orders { margin: auto; text-align: center; }
@@ -230,6 +231,7 @@
             font-weight: 600;
             color: var(--text-color-primary);
             margin-top: 10px;
+            word-break: break-all; 
         }
         .settings-actions-section {
             background-color: var(--card-background-default);
@@ -286,24 +288,41 @@
             display: block; width: 100%; background-color: var(--accent-color-cta); color: white;
             padding: 14px; border: none; border-radius: 10px; font-size: 0.95rem;
             font-weight: 600; text-align: center; cursor: pointer; transition: background-color 0.2s;
+            margin-bottom: 10px; 
         }
-        .modal-footer .btn-cta:hover { background-color: darken(var(--accent-color-cta), 10%); }
-        
+        .modal-footer .btn-cta:last-child {
+            margin-bottom: 0;
+        }
+        .modal-footer .btn-secondary { 
+             background-color: var(--text-color-secondary);
+        }
+        .modal-footer .btn-secondary:hover {
+            background-color: darken(var(--text-color-secondary), 10%);
+        }
+        .btn-google-signin {
+            background-color: #DB4437 !important; /* Google Red */
+            color: white !important;
+        }
+        .btn-google-signin:hover {
+            background-color: #C33D2E !important;
+        }
+        .btn-google-signin i { margin-right: 8px; }
+
+
         /* Order Form & Auth Form Specific Styles */
         #orderForm .form-group, 
-        #mobileSignupForm .form-group, 
-        #otpVerifyForm .form-group { 
+        #emailAuthForm .form-group { 
             margin-bottom: 15px; 
         }
         #orderForm label,
-        #mobileSignupForm label,
-        #otpVerifyForm label { 
+        #emailAuthForm label { 
             display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.9rem; 
         }
         #orderForm input[type="text"], #orderForm input[type="tel"], 
         #orderForm input[type="number"], #orderForm select, #orderForm textarea,
-        #mobileSignupForm input[type="tel"], 
-        #otpVerifyForm input[type="number"] {
+        #orderForm input[type="email"], /* For order form email */
+        #emailAuthForm input[type="email"], 
+        #emailAuthForm input[type="password"] { 
             width: 100%; padding: 12px; border: 1px solid var(--border-color);
             border-radius: 8px; font-family: var(--primary-font); font-size: 0.95rem;
             background-color: white;
@@ -374,8 +393,7 @@
             .modal-header .back-btn { position: static; margin-right: auto; order: -1; }
             .modal-header .cart-btn-modal { position: static; margin-left: auto; }
             #settingsModal .modal-content,
-            #signupMobileModal .modal-content, 
-            #otpVerificationModal .modal-content { 
+            #authModal .modal-content { 
                 max-width: 420px; 
             }
             #settingsModal .modal-content {max-width: 500px;} 
@@ -384,8 +402,6 @@
     </style>
 </head>
 <body>
-    <!-- This div is used by Firebase for reCAPTCHA. It's invisible. -->
-    <div id="recaptcha-container" style="position: fixed; bottom: 0; right: 0; z-index: -10; opacity: 0; width:0; height:0;"></div>
 
     <header>
         <div class="container">
@@ -438,6 +454,10 @@
                     <div class="form-group">
                         <label for="customerMobile">Mobile Number:</label>
                         <input type="tel" id="customerMobile" name="customerMobile" pattern="[0-9]{10}" title="Please enter a valid 10-digit mobile number" required>
+                    </div>
+                    <div class="form-group"> 
+                        <label for="customerEmail">Contact Email (Optional):</label>
+                        <input type="email" id="customerEmail" name="customerEmail">
                     </div>
                     <div class="form-group">
                         <label for="customerPincode">Pincode (6 digit):</label>
@@ -495,7 +515,7 @@
                     <div class="settings-avatar-container">
                         <i class="fas fa-user"></i>
                     </div>
-                    <button class="btn-settings-action" id="btnSignupLoginLogout">Sign up / Login with Mobile</button>
+                    <button class="btn-settings-action" id="btnAuthAction">Sign up / Login</button>
                     <p class="profile-details-text" id="profileDetailsText">View and update your profile details</p>
                     <p class="profile-details-text" id="loggedInUserInfo" style="display: none;"></p>
                 </div>
@@ -517,50 +537,33 @@
         </div>
     </div>
 
-    <!-- Mobile Sign-up Modal -->
-    <div id="signupMobileModal" class="modal">
+    <!-- Email/Password/Google Auth Modal -->
+    <div id="authModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <button class="back-btn" onclick="closeModal('signupMobileModal')"><i class="fas fa-arrow-left"></i></button>
-                <h3 class="modal-title">Sign Up / Login</h3>
+                <button class="back-btn" onclick="closeModal('authModal')"><i class="fas fa-arrow-left"></i></button>
+                <h3 class="modal-title">Login / Sign Up</h3>
             </div>
             <div class="modal-body">
-                <form id="mobileSignupForm">
-                    <p style="margin-bottom: 15px; font-size: 0.9rem; color: var(--text-color-secondary);">Enter your mobile number to continue (e.g., +91XXXXXXXXXX).</p>
+                <form id="emailAuthForm">
                     <div class="form-group">
-                        <label for="signupMobileNumber">Mobile Number (with country code):</label>
-                        <input type="tel" id="signupMobileNumber" name="signupMobileNumber" title="Please enter a valid mobile number with country code" required placeholder="E.g., +919876543210">
+                        <label for="authEmail">Email Address:</label>
+                        <input type="email" id="authEmail" name="authEmail" required placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="authPassword">Password:</label>
+                        <input type="password" id="authPassword" name="authPassword" required placeholder="Enter your password (min. 6 characters)">
                     </div>
                 </form>
+                <div class="auth-divider">OR</div>
             </div>
             <div class="modal-footer">
-                <button type="button" id="sendOtpBtn" class="btn-cta">Send OTP</button>
+                <button type="button" id="loginBtn" class="btn-cta">Login with Email</button>
+                <button type="button" id="signupBtn" class="btn-cta btn-secondary">Sign Up with Email</button>
+                <button type="button" id="googleSignInBtn" class="btn-cta btn-google-signin"><i class="fab fa-google"></i>Sign in with Google</button>
             </div>
         </div>
     </div>
-
-    <!-- OTP Verification Modal -->
-    <div id="otpVerificationModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                 <button class="back-btn" onclick="closeModal('otpVerificationModal'); openModal('signupMobileModal');"><i class="fas fa-arrow-left"></i></button>
-                <h3 class="modal-title">Verify OTP</h3>
-            </div>
-            <div class="modal-body">
-                <form id="otpVerifyForm">
-                    <p style="margin-bottom: 10px; font-size: 0.9rem; color: var(--text-color-secondary);">An OTP has been sent to <strong id="otpSentToMobile"></strong>. Please enter it below.</p>
-                    <div class="form-group">
-                        <label for="otpInput">Enter OTP (6 digits):</label>
-                        <input type="number" id="otpInput" name="otpInput" pattern="[0-9]{6}" title="Please enter the 6-digit OTP" required placeholder="_ _ _ _ _ _">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" id="verifyOtpBtn" class="btn-cta">Verify & Proceed</button>
-            </div>
-        </div>
-    </div>
-
 
     <nav class="bottom-nav">
         <a href="#" class="bottom-nav-item active" id="navHome"><i class="fas fa-home"></i><span>Home</span></a>
@@ -575,8 +578,7 @@
             authDomain: "christian-shopping-805b8.firebaseapp.com",
             databaseURL: "https://christian-shopping-805b8-default-rtdb.firebaseio.com",
             projectId: "christian-shopping-805b8",
-            storageBucket: "christian-shopping-805b8.appspot.com", // Corrected to .appspot.com if it's an older project, or .firebasestorage.app for newer. Your provided config had .firebasestorage.app, I'll use that.
-            // storageBucket: "christian-shopping-805b8.firebasestorage.app", // As per your initial config snippet
+            storageBucket: "christian-shopping-805b8.appspot.com",
             messagingSenderId: "909600369372",
             appId: "1:909600369372:web:1871ab693fd748c9a56219",
             measurementId: "G-85XPBKJTMK"
@@ -585,8 +587,6 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
-        // If you plan to use Firebase Analytics:
-        // const analytics = firebase.analytics(); 
         // --- END OF YOUR FIREBASE CONFIGURATION ---
 
 
@@ -607,7 +607,8 @@
             const orderForm = document.getElementById('orderForm');
             const formProductIdInput = document.getElementById('formProductId');
             const customerNameInput = document.getElementById('customerName');
-            const customerMobileInput = document.getElementById('customerMobile'); // For order form
+            const customerMobileInput = document.getElementById('customerMobile'); 
+            const customerEmailInput = document.getElementById('customerEmail'); 
             const customerPincodeInput = document.getElementById('customerPincode');
             const customerPostOfficeSelect = document.getElementById('customerPostOffice');
             const customerDistrictInput = document.getElementById('customerDistrict');
@@ -628,19 +629,17 @@
 
             // --- Auth State and Elements ---
             let isLoggedIn = false;
-            let currentUserMobile = null; // Will store the E.164 formatted number from Firebase
-            window.recaptchaVerifier = null; // Firebase reCAPTCHA
-            window.confirmationResult = null; // Firebase confirmation result
+            let currentUserEmail = null; // Can also be from Google
+            let currentUserName = null; // For Google display name
 
-            const signupMobileModalEl = document.getElementById('signupMobileModal');
-            const otpVerificationModalEl = document.getElementById('otpVerificationModal');
-            const signupMobileNumberInput = document.getElementById('signupMobileNumber'); // For auth
-            const sendOtpBtn = document.getElementById('sendOtpBtn');
-            const otpInput = document.getElementById('otpInput');
-            const otpSentToMobileEl = document.getElementById('otpSentToMobile');
-            const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+            const authModalEl = document.getElementById('authModal');
+            const authEmailInput = document.getElementById('authEmail');
+            const authPasswordInput = document.getElementById('authPassword');
+            const loginBtn = document.getElementById('loginBtn');
+            const signupBtn = document.getElementById('signupBtn');
+            const googleSignInBtn = document.getElementById('googleSignInBtn'); // Google Sign-In button
 
-            const btnSignupLoginLogout = document.getElementById('btnSignupLoginLogout');
+            const btnAuthAction = document.getElementById('btnAuthAction'); 
             const profileDetailsTextEl = document.getElementById('profileDetailsText');
             const loggedInUserInfoEl = document.getElementById('loggedInUserInfo');
             
@@ -656,225 +655,163 @@
             let currentPincodeData = null; 
 
             // --- FIREBASE AUTH FUNCTIONS ---
-            function setupRecaptcha() {
-                if (!window.recaptchaVerifier) { 
-                    try {
-                        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-                            'size': 'invisible', 
-                            'callback': (response) => {
-                                console.log("reCAPTCHA solved (visible reCAPTCHA callback)");
-                            },
-                            'expired-callback': () => {
-                                console.log("reCAPTCHA expired");
-                                alert("reCAPTCHA expired. Please try sending OTP again.");
-                                if(sendOtpBtn) {
-                                    sendOtpBtn.disabled = false;
-                                    sendOtpBtn.textContent = 'Send OTP';
-                                }
-                            }
-                        });
-                        window.recaptchaVerifier.render().then(widgetId => { 
-                            window.recaptchaWidgetId = widgetId;
-                            console.log("reCAPTCHA rendered, widgetId:", widgetId);
-                        }).catch(error => {
-                            console.error("Recaptcha render error:", error);
-                            alert("Error setting up reCAPTCHA. Please refresh and try again. Ensure your domain is authorized in Firebase.");
-                             if(sendOtpBtn) {
-                                sendOtpBtn.disabled = false;
-                                sendOtpBtn.textContent = 'Send OTP';
-                            }
-                        });
-                    } catch (e) {
-                        console.error("Error initializing RecaptchaVerifier:", e);
-                        alert("Critical error setting up reCAPTCHA. Check console and Firebase setup.");
-                         if(sendOtpBtn) {
-                            sendOtpBtn.disabled = false;
-                            sendOtpBtn.textContent = 'Send OTP';
-                        }
-                    }
-                } else if (window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function' && !window.recaptchaWidgetId) {
-                    // If verifier exists but not rendered (e.g. after a clear/reset)
-                     window.recaptchaVerifier.render().then(widgetId => { 
-                        window.recaptchaWidgetId = widgetId;
-                        console.log("reCAPTCHA re-rendered, widgetId:", widgetId);
-                    }).catch(error => {
-                         console.error("Recaptcha re-render error:", error);
-                    });
-                }
-            }
-            
+            const googleProvider = new firebase.auth.GoogleAuthProvider();
+            // Optional: Add scopes if needed, e.g., to get more profile info
+            // googleProvider.addScope('profile');
+            // googleProvider.addScope('email');
+
+
             auth.onAuthStateChanged((user) => {
                 if (user) {
                     isLoggedIn = true;
-                    currentUserMobile = user.phoneNumber; 
-                    console.log("User logged in:", currentUserMobile);
+                    currentUserEmail = user.email; 
+                    currentUserName = user.displayName || user.email; // Use displayName if available from Google
+                    console.log("User logged in:", currentUserEmail, "Name:", currentUserName);
                 } else {
                     isLoggedIn = false;
-                    currentUserMobile = null;
+                    currentUserEmail = null;
+                    currentUserName = null;
                     console.log("User logged out");
                 }
                 updateAuthUI();
             });
 
-
             function updateAuthUI() {
-                if (!btnSignupLoginLogout || !profileDetailsTextEl || !loggedInUserInfoEl) return;
+                if (!btnAuthAction || !profileDetailsTextEl || !loggedInUserInfoEl) return;
 
-                if (isLoggedIn && currentUserMobile) {
-                    btnSignupLoginLogout.textContent = 'Logout';
-                    btnSignupLoginLogout.classList.remove('btn-signup-settings'); 
-                    btnSignupLoginLogout.classList.add('btn-logout-settings');
+                if (isLoggedIn && currentUserName) {
+                    btnAuthAction.textContent = 'Logout';
+                    btnAuthAction.classList.remove('btn-signup-settings'); 
+                    btnAuthAction.classList.add('btn-logout-settings');
                     
                     profileDetailsTextEl.style.display = 'none';
-                    loggedInUserInfoEl.textContent = `Logged in as: ${currentUserMobile}`;
+                    loggedInUserInfoEl.textContent = `Logged in as: ${currentUserName}`;
                     loggedInUserInfoEl.style.display = 'block';
                     
-                    if (customerMobileInput) { 
-                        if (currentUserMobile.startsWith('+91') && currentUserMobile.length === 13) {
-                             customerMobileInput.value = currentUserMobile.substring(3);
-                        } else {
-                            customerMobileInput.value = currentUserMobile; 
-                        }
+                    if (customerEmailInput && currentUserEmail) { 
+                        customerEmailInput.value = currentUserEmail;
+                    }
+                    if (customerNameInput && user.displayName && !customerNameInput.value) { // Prefill name if Google provided it
+                        customerNameInput.value = user.displayName;
                     }
                 } else {
-                    btnSignupLoginLogout.textContent = 'Sign up / Login with Mobile';
-                    btnSignupLoginLogout.classList.add('btn-signup-settings');
-                    btnSignupLoginLogout.classList.remove('btn-logout-settings');
+                    btnAuthAction.textContent = 'Sign up / Login';
+                    btnAuthAction.classList.add('btn-signup-settings');
+                    btnAuthAction.classList.remove('btn-logout-settings');
 
                     profileDetailsTextEl.textContent = 'Sign up or login to manage your orders and profile.';
                     profileDetailsTextEl.style.display = 'block';
                     loggedInUserInfoEl.style.display = 'none';
 
-                    if (customerMobileInput) {
-                        customerMobileInput.value = ''; 
-                    }
+                    if (customerEmailInput) customerEmailInput.value = ''; 
+                    // Do not clear customerNameInput automatically on logout, user might have typed it
                 }
             }
 
-            function handleSignupLoginLogoutClick() {
-                 if (isLoggedIn) {
+            function handleAuthActionClick() {
+                 if (isLoggedIn) { 
                     if (confirm("Are you sure you want to logout?")) {
                         auth.signOut().then(() => {
                             alert("You have been logged out.");
                         }).catch((error) => {
                             console.error("Logout Error:", error);
-                            alert("Error logging out. Please try again.");
+                            alert("Error logging out: " + error.message);
                         });
                     }
-                } else {
+                } else { 
                     closeModal('settingsModal', true); 
-                    openModal('signupMobileModal');
-                    if(signupMobileNumberInput) signupMobileNumberInput.value = ''; 
-                    setupRecaptcha(); 
+                    openModal('authModal');
+                    if(authEmailInput) authEmailInput.value = ''; 
+                    if(authPasswordInput) authPasswordInput.value = '';
                 }
             }
 
-            if (btnSignupLoginLogout) {
-                btnSignupLoginLogout.addEventListener('click', handleSignupLoginLogoutClick);
+            if (btnAuthAction) {
+                btnAuthAction.addEventListener('click', handleAuthActionClick);
             }
 
-            if (sendOtpBtn) {
-                sendOtpBtn.addEventListener('click', () => {
-                    if (!signupMobileNumberInput) return;
+            if (loginBtn) {
+                loginBtn.addEventListener('click', () => {
+                    const email = authEmailInput.value.trim();
+                    const password = authPasswordInput.value.trim();
+                    if (!email || !password) { alert("Please enter both email and password."); return; }
                     
-                    if (!window.recaptchaVerifier || !window.recaptchaWidgetId) {
-                        console.log("reCAPTCHA not ready or not rendered, attempting to set up.");
-                        setupRecaptcha(); // Ensure it's setup and rendered
-                        // It might take a moment to render, so user might need to click again.
-                        // A better UX would be to disable button until reCAPTCHA is confirmed ready.
-                        // For simplicity here, we'll proceed, but Firebase SDK might handle the wait.
-                         if (!window.recaptchaVerifier) { // if setupRecaptcha failed critically
-                            alert("reCAPTCHA setup failed. Please refresh the page.");
-                            return;
-                         }
-                    }
-
-                    const mobileWithCountryCode = signupMobileNumberInput.value.trim();
-                    if (!/^\+[1-9]\d{1,14}$/.test(mobileWithCountryCode)) {
-                        alert("Please enter a valid mobile number with country code (e.g., +919876543210).");
-                        signupMobileNumberInput.focus();
-                        return;
-                    }
-
-                    sendOtpBtn.disabled = true;
-                    sendOtpBtn.textContent = 'Sending...';
-
-                    auth.signInWithPhoneNumber(mobileWithCountryCode, window.recaptchaVerifier)
-                        .then((confirmationResultPayload) => {
-                            window.confirmationResult = confirmationResultPayload;
-                            console.log("OTP sent to", mobileWithCountryCode);
-                            alert("OTP has been sent to " + mobileWithCountryCode + ". Please check your messages.");
-                            
-                            if(otpSentToMobileEl) otpSentToMobileEl.textContent = mobileWithCountryCode;
-                            if(otpInput) otpInput.value = '';
-
-                            closeModal('signupMobileModal', true);
-                            openModal('otpVerificationModal');
-                            if(otpInput) otpInput.focus();
-                        }).catch((error) => {
-                            console.error("Error sending OTP:", error);
-                            alert("Error sending OTP: " + error.message + "\nMake sure you have enabled Phone Auth in Firebase, authorized your domain (e.g., localhost), and are using a valid number format (e.g., +91XXXXXXXXXX). If using a test number, ensure it's correctly configured in Firebase.");
-                            
-                            // Reset reCAPTCHA for a retry
-                            if (window.recaptchaVerifier && typeof window.recaptchaVerifier.clear === 'function') {
-                                try {
-                                    grecaptcha.reset(window.recaptchaWidgetId); // Use grecaptcha directly for reset if available
-                                } catch (e) {
-                                    console.warn("Could not reset grecaptcha widget, trying verifier.clear()", e);
-                                    try {
-                                       window.recaptchaVerifier.clear(); 
-                                    } catch (e2) {
-                                       console.error("Failed to clear recaptchaVerifier", e2)
-                                    }
-                                }
-                            }
-                            // No need to set window.recaptchaVerifier = null here as setupRecaptcha checks if it exists.
-                            // setupRecaptcha(); // Re-call to ensure it's ready for next attempt if needed.
-                        }).finally(() => {
-                            sendOtpBtn.disabled = false;
-                            sendOtpBtn.textContent = 'Send OTP';
-                        });
+                    setAuthButtonsLoading(true, 'Logging in...');
+                    auth.signInWithEmailAndPassword(email, password)
+                        .then((userCredential) => {
+                            alert("Successfully logged in!");
+                            closeModal('authModal');
+                        })
+                        .catch((error) => {
+                            console.error("Login error:", error);
+                            alert("Login failed: " + error.message);
+                        })
+                        .finally(() => setAuthButtonsLoading(false));
                 });
             }
 
-            if (verifyOtpBtn) {
-                verifyOtpBtn.addEventListener('click', () => {
-                    if (!otpInput || !window.confirmationResult) {
-                        alert("System error. Please try signing in again from the beginning.");
-                        closeModal('otpVerificationModal');
-                        closeModal('signupMobileModal');
-                        return;
-                    }
-                    const enteredOtp = otpInput.value.trim(); 
+            if (signupBtn) {
+                signupBtn.addEventListener('click', () => {
+                    const email = authEmailInput.value.trim();
+                    const password = authPasswordInput.value.trim();
+                    if (!email || !password) { alert("Please enter both email and password."); return; }
+                    if (password.length < 6) { alert("Password should be at least 6 characters long."); return; }
 
-                    if (!/^\d{6}$/.test(enteredOtp)) { 
-                        alert("Please enter the 6-digit OTP.");
-                        otpInput.focus();
-                        return;
-                    }
+                    setAuthButtonsLoading(true, 'Signing up...');
+                    auth.createUserWithEmailAndPassword(email, password)
+                        .then((userCredential) => {
+                            alert("Successfully signed up and logged in!");
+                            closeModal('authModal');
+                        })
+                        .catch((error) => {
+                            console.error("Sign up error:", error);
+                            alert("Sign up failed: " + error.message);
+                        })
+                        .finally(() => setAuthButtonsLoading(false));
+                });
+            }
 
-                    verifyOtpBtn.disabled = true;
-                    verifyOtpBtn.textContent = 'Verifying...';
-
-                    window.confirmationResult.confirm(enteredOtp)
+            if (googleSignInBtn) {
+                googleSignInBtn.addEventListener('click', () => {
+                    setAuthButtonsLoading(true, 'Connecting to Google...');
+                    auth.signInWithPopup(googleProvider)
                         .then((result) => {
                             const user = result.user;
-                            console.log("User verified and signed in:", user.phoneNumber);
-                            alert(`Successfully logged in as ${user.phoneNumber}!`);
-                            closeModal('otpVerificationModal');
+                            console.log("Signed in with Google:", user.displayName, user.email);
+                            alert(`Successfully signed in with Google as ${user.displayName || user.email}!`);
+                            closeModal('authModal');
                         }).catch((error) => {
-                            console.error("Error verifying OTP:", error);
-                            alert("Invalid OTP or error verifying: " + error.message + "\nPlease try again.");
-                            otpInput.value = '';
-                            otpInput.focus();
-                        }).finally(() => {
-                            verifyOtpBtn.disabled = false;
-                            verifyOtpBtn.textContent = 'Verify & Proceed';
-                        });
+                            console.error("Google Sign-In Error:", error);
+                            if (error.code === 'auth/account-exists-with-different-credential') {
+                                alert("An account already exists with this email address using a different sign-in method. Please sign in using that method first, or use a different Google account.");
+                                // More sophisticated linking could be implemented here
+                            } else {
+                                alert("Google Sign-In Failed: " + error.message);
+                            }
+                        }).finally(() => setAuthButtonsLoading(false));
                 });
             }
+            
+            function setAuthButtonsLoading(isLoading, message = '') {
+                if (loginBtn) {
+                    loginBtn.disabled = isLoading;
+                    if (isLoading) loginBtn.textContent = message || 'Processing...';
+                    else loginBtn.textContent = 'Login with Email';
+                }
+                if (signupBtn) {
+                    signupBtn.disabled = isLoading;
+                    if (isLoading) signupBtn.textContent = message || 'Processing...';
+                    else signupBtn.textContent = 'Sign Up with Email';
+                }
+                if (googleSignInBtn) {
+                    googleSignInBtn.disabled = isLoading;
+                    if (isLoading) googleSignInBtn.innerHTML = `<i class="fab fa-google"></i> ${message || 'Processing...'}`;
+                    else googleSignInBtn.innerHTML = '<i class="fab fa-google"></i>Sign in with Google';
+                }
+            }
 
-            // --- PINCODE LOGIC ---
+
+            // --- PINCODE LOGIC --- 
             if(customerPincodeInput) { 
                 customerPincodeInput.addEventListener('input', function() {
                     const pincode = this.value;
@@ -926,7 +863,7 @@
                 }
             }
 
-            // --- RENDER CATEGORIES & PRODUCTS ---
+            // --- RENDER CATEGORIES & PRODUCTS --- 
             function renderCategories() {
                 const uniqueCategories = ['All', ...new Set(products.map(p => p.category))];
                 if (!categoriesContainer) return;
@@ -993,7 +930,7 @@
             }
             function filterProductsByCategory(category) { renderProducts(category); }
 
-            // --- SHOW PRODUCT DETAIL & ORDER FORM ---
+            // --- SHOW PRODUCT DETAIL & ORDER FORM --- 
              function showProductDetail(productId) {
                 const product = products.find(p => p.id === productId); if (!product) return;
                 let colorsHtml = '';
@@ -1027,13 +964,17 @@
                 formProductIdInput.value = productId; 
                 orderForm.reset(); 
                 
-                if (isLoggedIn && currentUserMobile && customerMobileInput) {
-                    if (currentUserMobile.startsWith('+91') && currentUserMobile.length === 13) {
-                        customerMobileInput.value = currentUserMobile.substring(3);
-                    } else {
-                        customerMobileInput.value = currentUserMobile; 
+                const user = auth.currentUser; // Get current user from Firebase
+                if (user) {
+                    if (customerEmailInput && user.email) { 
+                        customerEmailInput.value = user.email;
                     }
+                    if (customerNameInput && user.displayName && !customerNameInput.value) { // If name field is empty, prefill from Google
+                        customerNameInput.value = user.displayName;
+                    }
+                    // Mobile number is not directly available from Google/Email auth, user needs to type it
                 }
+
 
                 customerPostOfficeSelect.innerHTML = '<option value="">-- Select Post Office --</option>';
                 customerDistrictInput.value = ''; customerStateInput.value = '';
@@ -1046,20 +987,31 @@
                 if (!formProductIdInput || !customerNameInput || !customerMobileInput || !customerPincodeInput || !customerPostOfficeSelect || !customerDistrictInput || !customerStateInput || !customerVillageLandmarkInput || !customerFullAddressInput) return;
 
                 const productId = parseInt(formProductIdInput.value); const product = products.find(p => p.id === productId);
-                const name = customerNameInput.value.trim(); const mobile = customerMobileInput.value.trim(); 
-                const pincode = customerPincodeInput.value.trim(); const selectedPostOffice = customerPostOfficeSelect.value.trim();
-                const district = customerDistrictInput.value.trim(); const state = customerStateInput.value.trim();
-                const villageLandmark = customerVillageLandmarkInput.value.trim(); const fullAddress = customerFullAddressInput.value.trim();
+                const name = customerNameInput.value.trim(); 
+                const mobile = customerMobileInput.value.trim(); 
+                const orderEmail = customerEmailInput.value.trim(); 
+                const pincode = customerPincodeInput.value.trim(); 
+                const selectedPostOffice = customerPostOfficeSelect.value.trim();
+                const district = customerDistrictInput.value.trim(); 
+                const state = customerStateInput.value.trim();
+                const villageLandmark = customerVillageLandmarkInput.value.trim(); 
+                const fullAddress = customerFullAddressInput.value.trim();
 
-                if (!name || !mobile || !pincode || !selectedPostOffice || !district || !state || !villageLandmark || !fullAddress) { alert("Please fill all delivery details."); return; }
+                if (!name || !mobile || !pincode || !selectedPostOffice || !district || !state || !villageLandmark || !fullAddress) { alert("Please fill all required delivery details."); return; }
                 if (!/^\d{10}$/.test(mobile)) { alert("Valid 10-digit mobile needed for delivery."); return; } 
                 if (!/^\d{6}$/.test(pincode)) { alert("Valid 6-digit pincode needed."); return; }
+                if (orderEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(orderEmail)) { 
+                    alert("Please enter a valid contact email address.");
+                    return;
+                }
 
+                const user = auth.currentUser;
                 const newOrder = { 
                     orderId: Date.now(), productId, productName: product.name, productImage: product.image,
-                    customerDetails: { name, mobile, pincode, postOffice: selectedPostOffice, district, state, villageLandmark, fullAddress },
+                    customerDetails: { name, mobile, email: orderEmail, pincode, postOffice: selectedPostOffice, district, state, villageLandmark, fullAddress },
                     orderDate: new Date().toLocaleDateString(),
-                    orderedBy: isLoggedIn ? currentUserMobile : 'guest' 
+                    orderedBy: user ? user.email : 'guest', // Store user's email from Firebase
+                    userId: user ? user.uid : null // Store Firebase User ID
                 };
                 orders.push(newOrder); localStorage.setItem('onlineStoreOrders', JSON.stringify(orders));
                 alert(`Thank you, ${name}! Your order for ${product.name} placed.`);
@@ -1068,7 +1020,7 @@
             if (orderForm) {
                 orderForm.addEventListener('submit', handleOrderSubmit);
             }
-            function renderMyOrders() {
+            function renderMyOrders() { 
                 if (!ordersListContainer) return;
                 ordersListContainer.innerHTML = ''; 
                 if (orders.length === 0) {
@@ -1081,8 +1033,6 @@
                     let addr = 'N/A';
                     if (d) {
                         addr = `${d.fullAddress || ''}${d.villageLandmark ? ', ' + d.villageLandmark : ''}${d.postOffice ? ', ' + d.postOffice : ''}${d.district ? ', ' + d.district : ''}${d.state ? ', ' + d.state : ''}${d.pincode ? ' - ' + d.pincode : ''}`;
-                    } else if (order.customerAddress) { 
-                        addr = order.customerAddress;
                     }
                     item.innerHTML = `
                         <div style="display:flex; align-items:center; gap:15px;">
@@ -1090,23 +1040,24 @@
                             <div>
                                 <h4 style="margin-bottom:5px; font-size:1rem;">${order.productName}</h4>
                                 <p style="font-size:0.8rem; color:var(--text-color-secondary);">ID: ${order.orderId}</p>
-                                <p style="font-size:0.8rem; color:var(--text-color-secondary);">To: ${d ? d.name : (order.customerName || 'N/A')}</p>
+                                <p style="font-size:0.8rem; color:var(--text-color-secondary);">To: ${d ? d.name : 'N/A'}</p>
+                                ${d && d.email ? `<p style="font-size:0.8rem; color:var(--text-color-secondary);">Email: ${d.email}</p>` : ''}
                                 <p style="font-size:0.8rem; color:var(--text-color-secondary);">Address: ${addr}</p>
-                                ${order.orderedBy && order.orderedBy !== 'guest' ? `<p style="font-size:0.75rem; color:var(--accent-color);">User: ${order.orderedBy}</p>` : ''}
+                                ${order.orderedBy && order.orderedBy !== 'guest' ? `<p style="font-size:0.75rem; color:var(--accent-color); word-break:break-all;">User: ${order.orderedBy}</p>` : ''}
                             </div>
                         </div>`;
                     ordersListContainer.appendChild(item);
                 });
             }
 
-            // --- MODAL open/close functions ---
+            // --- MODAL open/close functions --- 
             window.openModal = (id) => {
                 const modalToOpen = document.getElementById(id);
                 if (!modalToOpen) return;
                 modalToOpen.style.display = 'block';
                 bodyElement.classList.add('modal-open');
 
-                if (id === 'productDetailModal' || id === 'signupMobileModal' || id === 'otpVerificationModal' ) { 
+                if (id === 'productDetailModal' || id === 'authModal' ) { 
                     bottomNavElement.classList.add('is-hidden');
                     bodyElement.classList.add('no-bottom-padding');
                 } else {
@@ -1127,7 +1078,7 @@
                 }
                 
                 let shouldShowNav = true;
-                const fullScreenModals = ['productDetailModal', 'signupMobileModal', 'otpVerificationModal'];
+                const fullScreenModals = ['productDetailModal', 'authModal'];
                 if (fullScreenModals.some(modalId => {
                     const modalEl = document.getElementById(modalId);
                     return modalEl && modalEl.style.display === 'block';
@@ -1154,7 +1105,7 @@
                         closeModal(m.id, true); 
                     }
                 }); 
-                const anyFullScreenModalOpen = ['productDetailModal', 'signupMobileModal', 'otpVerificationModal'].some(id => {
+                const anyFullScreenModalOpen = ['productDetailModal', 'authModal'].some(id => {
                     const modalEl = document.getElementById(id);
                     return modalEl && modalEl.style.display === 'block';
                 });
@@ -1226,7 +1177,6 @@
             renderCategories(); 
             renderProducts(); 
             updateBottomNav('navHome');
-            // Firebase onAuthStateChanged will handle the initial auth UI update.
         });
     </script>
 </body>
