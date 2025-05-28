@@ -378,4 +378,856 @@
             #otpVerificationModal .modal-content { 
                 max-width: 420px; 
             }
-            #settingsModal .modal-content {max-width: 5
+            #settingsModal .modal-content {max-width: 500px;} 
+        }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <!-- This div is used by Firebase for reCAPTCHA. It's invisible. -->
+    <div id="recaptcha-container" style="position: fixed; bottom: 0; right: 0; z-index: -10; opacity: 0; width:0; height:0;"></div>
+
+    <header>
+        <div class="container">
+            <div class="store-title">Online Shop</div>
+            <div class="header-icons">
+                <button class="icon-btn"><i class="fas fa-search"></i></button>
+                <button class="icon-btn"><i class="fas fa-bell"></i><span class="badge hidden">3</span></button>
+                <button class="icon-btn" id="headerCartBtn"><i class="fas fa-shopping-bag"></i></button>
+                <button class="icon-btn grid-toggle-icon"><i class="fas fa-th-large"></i></button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <h2 class="section-title-main" id="main-section-title">Recommendations</h2>
+        <section id="categories-section"><div id="categories-container"></div></section>
+        <section id="products-section">
+            <h2 id="products-section-title">All Products</h2>
+            <div id="products-container"></div>
+        </section>
+    </main>
+
+    <!-- Product Detail Modal -->
+    <div id="productDetailModal" class="modal">
+        <div class="modal-content"> 
+            <div class="modal-header">
+                <button class="back-btn" onclick="closeModal('productDetailModal')"><i class="fas fa-arrow-left"></i></button>
+                <h3 class="modal-title">Details</h3>
+                <button class="cart-btn-modal icon-btn" onclick="document.getElementById('headerCartBtn').click()"><i class="fas fa-shopping-bag"></i></button>
+            </div>
+            <div class="modal-body"><div id="modal-product-info"></div></div>
+            <div class="modal-footer"><button id="orderNowFromDetailBtn" class="btn-cta">Add to Cart</button></div>
+        </div>
+    </div>
+
+    <!-- Order Form Modal -->
+    <div id="orderFormModal" class="modal">
+        <div class="modal-content">
+             <div class="modal-header">
+                <button class="back-btn" onclick="closeModal('orderFormModal'); if(document.getElementById('productDetailModal').style.display === 'block') openModal('productDetailModal');"><i class="fas fa-arrow-left"></i></button>
+                <h3 class="modal-title">Delivery Details</h3>
+            </div>
+            <div class="modal-body">
+                <form id="orderForm">
+                     <input type="hidden" id="formProductId">
+                    <div class="form-group">
+                        <label for="customerName">Name:</label>
+                        <input type="text" id="customerName" name="customerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerMobile">Mobile Number:</label>
+                        <input type="tel" id="customerMobile" name="customerMobile" pattern="[0-9]{10}" title="Please enter a valid 10-digit mobile number" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerPincode">Pincode (6 digit):</label>
+                        <input type="number" id="customerPincode" name="customerPincode" pattern="[0-9]{6}" title="Please enter a valid 6-digit pincode" required>
+                        <div id="pincodeStatus" class="pincode-status"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerPostOffice">Select Post Office:</label>
+                        <select id="customerPostOffice" name="customerPostOffice" required disabled>
+                            <option value="">-- Select Post Office --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerDistrict">District:</label>
+                        <input type="text" id="customerDistrict" name="customerDistrict" required readonly>
+                    </div>
+                     <div class="form-group">
+                        <label for="customerState">State:</label>
+                        <input type="text" id="customerState" name="customerState" required readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerVillageLandmark">Village:</label>
+                        <input type="text" id="customerVillageLandmark" name="customerVillageLandmark" placeholder="E.g., Your Village Name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerFullAddress">House No/Street/area name :</label>
+                        <textarea id="customerFullAddress" name="customerFullAddress" rows="2" placeholder="House No, Building, Street Name" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                 <button type="submit" form="orderForm" class="btn-cta">Submit Order</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Orders Modal -->
+    <div id="myOrdersModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">My Orders</h3>
+            </div>
+            <div class="modal-body"><div id="ordersListContainer"></div></div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Settings</h3>
+            </div>
+            <div class="modal-body">
+                <div class="settings-profile-section">
+                    <div class="settings-avatar-container">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <button class="btn-settings-action" id="btnSignupLoginLogout">Sign up / Login with Mobile</button>
+                    <p class="profile-details-text" id="profileDetailsText">View and update your profile details</p>
+                    <p class="profile-details-text" id="loggedInUserInfo" style="display: none;"></p>
+                </div>
+                <div class="settings-actions-section">
+                    <button class="settings-action-item" id="settingsShareBtn">
+                        <i class="fas fa-share-alt"></i>
+                        <span>Share App</span>
+                    </button>
+                    <button class="settings-action-item" id="settingsContactBtn">
+                        <i class="fas fa-envelope"></i>
+                        <span>Contact Us</span>
+                    </button>
+                    <button class="settings-action-item" id="settingsPrivacyBtn">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Privacy Policy</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Sign-up Modal -->
+    <div id="signupMobileModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="back-btn" onclick="closeModal('signupMobileModal')"><i class="fas fa-arrow-left"></i></button>
+                <h3 class="modal-title">Sign Up / Login</h3>
+            </div>
+            <div class="modal-body">
+                <form id="mobileSignupForm">
+                    <p style="margin-bottom: 15px; font-size: 0.9rem; color: var(--text-color-secondary);">Enter your mobile number to continue (e.g., +91XXXXXXXXXX).</p>
+                    <div class="form-group">
+                        <label for="signupMobileNumber">Mobile Number (with country code):</label>
+                        <input type="tel" id="signupMobileNumber" name="signupMobileNumber" title="Please enter a valid mobile number with country code" required placeholder="E.g., +919876543210">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="sendOtpBtn" class="btn-cta">Send OTP</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- OTP Verification Modal -->
+    <div id="otpVerificationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                 <button class="back-btn" onclick="closeModal('otpVerificationModal'); openModal('signupMobileModal');"><i class="fas fa-arrow-left"></i></button>
+                <h3 class="modal-title">Verify OTP</h3>
+            </div>
+            <div class="modal-body">
+                <form id="otpVerifyForm">
+                    <p style="margin-bottom: 10px; font-size: 0.9rem; color: var(--text-color-secondary);">An OTP has been sent to <strong id="otpSentToMobile"></strong>. Please enter it below.</p>
+                    <div class="form-group">
+                        <label for="otpInput">Enter OTP (6 digits):</label>
+                        <input type="number" id="otpInput" name="otpInput" pattern="[0-9]{6}" title="Please enter the 6-digit OTP" required placeholder="_ _ _ _ _ _">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="verifyOtpBtn" class="btn-cta">Verify & Proceed</button>
+            </div>
+        </div>
+    </div>
+
+
+    <nav class="bottom-nav">
+        <a href="#" class="bottom-nav-item active" id="navHome"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="#" class="bottom-nav-item" id="navOrders"><i class="fas fa-shopping-bag"></i><span>Cart</span></a>
+        <a href="#" class="bottom-nav-item" id="navSettings"><i class="fas fa-cog"></i><span>Setting</span></a>
+    </nav>
+
+    <script>
+        // --- START OF YOUR FIREBASE CONFIGURATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7pEI9WTNjMircinyK_dBSyXhKNurth98",
+            authDomain: "christian-shopping-805b8.firebaseapp.com",
+            databaseURL: "https://christian-shopping-805b8-default-rtdb.firebaseio.com",
+            projectId: "christian-shopping-805b8",
+            storageBucket: "christian-shopping-805b8.appspot.com", // Corrected to .appspot.com if it's an older project, or .firebasestorage.app for newer. Your provided config had .firebasestorage.app, I'll use that.
+            // storageBucket: "christian-shopping-805b8.firebasestorage.app", // As per your initial config snippet
+            messagingSenderId: "909600369372",
+            appId: "1:909600369372:web:1871ab693fd748c9a56219",
+            measurementId: "G-85XPBKJTMK"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        // If you plan to use Firebase Analytics:
+        // const analytics = firebase.analytics(); 
+        // --- END OF YOUR FIREBASE CONFIGURATION ---
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const bodyElement = document.body;
+            const bottomNavElement = document.querySelector('.bottom-nav');
+            
+            const categoriesContainer = document.getElementById('categories-container');
+            const productsContainer = document.getElementById('products-container');
+            const productsSectionTitleEl = document.getElementById('products-section-title');
+            const mainSectionTitleEl = document.getElementById('main-section-title');
+            
+            const productDetailModalEl = document.getElementById('productDetailModal');
+            const modalProductInfo = document.getElementById('modal-product-info');
+            const orderNowFromDetailBtn = document.getElementById('orderNowFromDetailBtn');
+            
+            const orderFormModalEl = document.getElementById('orderFormModal'); 
+            const orderForm = document.getElementById('orderForm');
+            const formProductIdInput = document.getElementById('formProductId');
+            const customerNameInput = document.getElementById('customerName');
+            const customerMobileInput = document.getElementById('customerMobile'); // For order form
+            const customerPincodeInput = document.getElementById('customerPincode');
+            const customerPostOfficeSelect = document.getElementById('customerPostOffice');
+            const customerDistrictInput = document.getElementById('customerDistrict');
+            const customerStateInput = document.getElementById('customerState');
+            const customerVillageLandmarkInput = document.getElementById('customerVillageLandmark');
+            const customerFullAddressInput = document.getElementById('customerFullAddress');
+            const pincodeStatusDiv = document.getElementById('pincodeStatus');
+
+            const myOrdersModalEl = document.getElementById('myOrdersModal'); 
+            const ordersListContainer = document.getElementById('ordersListContainer');
+            
+            const settingsModalEl = document.getElementById('settingsModal');
+
+            const headerCartBtn = document.getElementById('headerCartBtn');
+            const navHome = document.getElementById('navHome');
+            const navOrders = document.getElementById('navOrders');
+            const navSettings = document.getElementById('navSettings');
+
+            // --- Auth State and Elements ---
+            let isLoggedIn = false;
+            let currentUserMobile = null; // Will store the E.164 formatted number from Firebase
+            window.recaptchaVerifier = null; // Firebase reCAPTCHA
+            window.confirmationResult = null; // Firebase confirmation result
+
+            const signupMobileModalEl = document.getElementById('signupMobileModal');
+            const otpVerificationModalEl = document.getElementById('otpVerificationModal');
+            const signupMobileNumberInput = document.getElementById('signupMobileNumber'); // For auth
+            const sendOtpBtn = document.getElementById('sendOtpBtn');
+            const otpInput = document.getElementById('otpInput');
+            const otpSentToMobileEl = document.getElementById('otpSentToMobile');
+            const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+
+            const btnSignupLoginLogout = document.getElementById('btnSignupLoginLogout');
+            const profileDetailsTextEl = document.getElementById('profileDetailsText');
+            const loggedInUserInfoEl = document.getElementById('loggedInUserInfo');
+            
+            const products = [
+                { id: 1, name: "iPhone 12", category: "Electronics", image: "images/iphone12.png", price: "₹76500", description: "A14 Bionic chip...", colors: [{name: 'Purple', code: '#A076DA'}, {name: 'Blue', code: '#3B5998'}], sizes: ['128GB', '256GB'] },
+                { id: 2, name: "Hoodie Yellow", category: "Apparel", image: "images/hoodie-yellow.png", price: "₹6900", description: "Oversized hoodie...", colors: [{name: 'Yellow', code: '#FFD700'}, {name: 'Orange', code: '#FFA500'}], sizes: ['S','M', 'L', 'XL'] },
+                { id: 3, name: "Apple Watch 6", category: "Wearables", image: "images/applewatch6.png", price: "₹39500", description: "Measure blood oxygen...", colors: [{name: 'Space Gray', code: '#5A5A5A'}, {name: 'Silver', code: '#C0C0C0'}], sizes: ['40mm', '44mm'] },
+                { id: 4, name: "Men Shoes", category: "Footwear", image: "images/menshoes.png", price: "₹4500", description: "Comfortable sneakers...", colors: [{name: 'Grey', code: '#808080'}, {name: 'Black', code: '#000000'}], sizes: ['8', '9', '10'] },
+                { id: 5, name: "Holy Bible (KJV)", category: "Books", image: "images/bible.jpg", price: "₹499", description: "King James Version...", colors: [], sizes: ['Standard', 'Large Print'] },
+                { id: 6, name: "Cross Pendant Necklace", category: "Jewelry", image: "images/cross-necklace.jpg", price: "₹299", description: "Elegant silver-plated cross...", colors: [], sizes: ['One Size'] }
+            ];
+            let orders = JSON.parse(localStorage.getItem('onlineStoreOrders')) || [];
+            let currentPincodeData = null; 
+
+            // --- FIREBASE AUTH FUNCTIONS ---
+            function setupRecaptcha() {
+                if (!window.recaptchaVerifier) { 
+                    try {
+                        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+                            'size': 'invisible', 
+                            'callback': (response) => {
+                                console.log("reCAPTCHA solved (visible reCAPTCHA callback)");
+                            },
+                            'expired-callback': () => {
+                                console.log("reCAPTCHA expired");
+                                alert("reCAPTCHA expired. Please try sending OTP again.");
+                                if(sendOtpBtn) {
+                                    sendOtpBtn.disabled = false;
+                                    sendOtpBtn.textContent = 'Send OTP';
+                                }
+                            }
+                        });
+                        window.recaptchaVerifier.render().then(widgetId => { 
+                            window.recaptchaWidgetId = widgetId;
+                            console.log("reCAPTCHA rendered, widgetId:", widgetId);
+                        }).catch(error => {
+                            console.error("Recaptcha render error:", error);
+                            alert("Error setting up reCAPTCHA. Please refresh and try again. Ensure your domain is authorized in Firebase.");
+                             if(sendOtpBtn) {
+                                sendOtpBtn.disabled = false;
+                                sendOtpBtn.textContent = 'Send OTP';
+                            }
+                        });
+                    } catch (e) {
+                        console.error("Error initializing RecaptchaVerifier:", e);
+                        alert("Critical error setting up reCAPTCHA. Check console and Firebase setup.");
+                         if(sendOtpBtn) {
+                            sendOtpBtn.disabled = false;
+                            sendOtpBtn.textContent = 'Send OTP';
+                        }
+                    }
+                } else if (window.recaptchaVerifier && typeof window.recaptchaVerifier.render === 'function' && !window.recaptchaWidgetId) {
+                    // If verifier exists but not rendered (e.g. after a clear/reset)
+                     window.recaptchaVerifier.render().then(widgetId => { 
+                        window.recaptchaWidgetId = widgetId;
+                        console.log("reCAPTCHA re-rendered, widgetId:", widgetId);
+                    }).catch(error => {
+                         console.error("Recaptcha re-render error:", error);
+                    });
+                }
+            }
+            
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    isLoggedIn = true;
+                    currentUserMobile = user.phoneNumber; 
+                    console.log("User logged in:", currentUserMobile);
+                } else {
+                    isLoggedIn = false;
+                    currentUserMobile = null;
+                    console.log("User logged out");
+                }
+                updateAuthUI();
+            });
+
+
+            function updateAuthUI() {
+                if (!btnSignupLoginLogout || !profileDetailsTextEl || !loggedInUserInfoEl) return;
+
+                if (isLoggedIn && currentUserMobile) {
+                    btnSignupLoginLogout.textContent = 'Logout';
+                    btnSignupLoginLogout.classList.remove('btn-signup-settings'); 
+                    btnSignupLoginLogout.classList.add('btn-logout-settings');
+                    
+                    profileDetailsTextEl.style.display = 'none';
+                    loggedInUserInfoEl.textContent = `Logged in as: ${currentUserMobile}`;
+                    loggedInUserInfoEl.style.display = 'block';
+                    
+                    if (customerMobileInput) { 
+                        if (currentUserMobile.startsWith('+91') && currentUserMobile.length === 13) {
+                             customerMobileInput.value = currentUserMobile.substring(3);
+                        } else {
+                            customerMobileInput.value = currentUserMobile; 
+                        }
+                    }
+                } else {
+                    btnSignupLoginLogout.textContent = 'Sign up / Login with Mobile';
+                    btnSignupLoginLogout.classList.add('btn-signup-settings');
+                    btnSignupLoginLogout.classList.remove('btn-logout-settings');
+
+                    profileDetailsTextEl.textContent = 'Sign up or login to manage your orders and profile.';
+                    profileDetailsTextEl.style.display = 'block';
+                    loggedInUserInfoEl.style.display = 'none';
+
+                    if (customerMobileInput) {
+                        customerMobileInput.value = ''; 
+                    }
+                }
+            }
+
+            function handleSignupLoginLogoutClick() {
+                 if (isLoggedIn) {
+                    if (confirm("Are you sure you want to logout?")) {
+                        auth.signOut().then(() => {
+                            alert("You have been logged out.");
+                        }).catch((error) => {
+                            console.error("Logout Error:", error);
+                            alert("Error logging out. Please try again.");
+                        });
+                    }
+                } else {
+                    closeModal('settingsModal', true); 
+                    openModal('signupMobileModal');
+                    if(signupMobileNumberInput) signupMobileNumberInput.value = ''; 
+                    setupRecaptcha(); 
+                }
+            }
+
+            if (btnSignupLoginLogout) {
+                btnSignupLoginLogout.addEventListener('click', handleSignupLoginLogoutClick);
+            }
+
+            if (sendOtpBtn) {
+                sendOtpBtn.addEventListener('click', () => {
+                    if (!signupMobileNumberInput) return;
+                    
+                    if (!window.recaptchaVerifier || !window.recaptchaWidgetId) {
+                        console.log("reCAPTCHA not ready or not rendered, attempting to set up.");
+                        setupRecaptcha(); // Ensure it's setup and rendered
+                        // It might take a moment to render, so user might need to click again.
+                        // A better UX would be to disable button until reCAPTCHA is confirmed ready.
+                        // For simplicity here, we'll proceed, but Firebase SDK might handle the wait.
+                         if (!window.recaptchaVerifier) { // if setupRecaptcha failed critically
+                            alert("reCAPTCHA setup failed. Please refresh the page.");
+                            return;
+                         }
+                    }
+
+                    const mobileWithCountryCode = signupMobileNumberInput.value.trim();
+                    if (!/^\+[1-9]\d{1,14}$/.test(mobileWithCountryCode)) {
+                        alert("Please enter a valid mobile number with country code (e.g., +919876543210).");
+                        signupMobileNumberInput.focus();
+                        return;
+                    }
+
+                    sendOtpBtn.disabled = true;
+                    sendOtpBtn.textContent = 'Sending...';
+
+                    auth.signInWithPhoneNumber(mobileWithCountryCode, window.recaptchaVerifier)
+                        .then((confirmationResultPayload) => {
+                            window.confirmationResult = confirmationResultPayload;
+                            console.log("OTP sent to", mobileWithCountryCode);
+                            alert("OTP has been sent to " + mobileWithCountryCode + ". Please check your messages.");
+                            
+                            if(otpSentToMobileEl) otpSentToMobileEl.textContent = mobileWithCountryCode;
+                            if(otpInput) otpInput.value = '';
+
+                            closeModal('signupMobileModal', true);
+                            openModal('otpVerificationModal');
+                            if(otpInput) otpInput.focus();
+                        }).catch((error) => {
+                            console.error("Error sending OTP:", error);
+                            alert("Error sending OTP: " + error.message + "\nMake sure you have enabled Phone Auth in Firebase, authorized your domain (e.g., localhost), and are using a valid number format (e.g., +91XXXXXXXXXX). If using a test number, ensure it's correctly configured in Firebase.");
+                            
+                            // Reset reCAPTCHA for a retry
+                            if (window.recaptchaVerifier && typeof window.recaptchaVerifier.clear === 'function') {
+                                try {
+                                    grecaptcha.reset(window.recaptchaWidgetId); // Use grecaptcha directly for reset if available
+                                } catch (e) {
+                                    console.warn("Could not reset grecaptcha widget, trying verifier.clear()", e);
+                                    try {
+                                       window.recaptchaVerifier.clear(); 
+                                    } catch (e2) {
+                                       console.error("Failed to clear recaptchaVerifier", e2)
+                                    }
+                                }
+                            }
+                            // No need to set window.recaptchaVerifier = null here as setupRecaptcha checks if it exists.
+                            // setupRecaptcha(); // Re-call to ensure it's ready for next attempt if needed.
+                        }).finally(() => {
+                            sendOtpBtn.disabled = false;
+                            sendOtpBtn.textContent = 'Send OTP';
+                        });
+                });
+            }
+
+            if (verifyOtpBtn) {
+                verifyOtpBtn.addEventListener('click', () => {
+                    if (!otpInput || !window.confirmationResult) {
+                        alert("System error. Please try signing in again from the beginning.");
+                        closeModal('otpVerificationModal');
+                        closeModal('signupMobileModal');
+                        return;
+                    }
+                    const enteredOtp = otpInput.value.trim(); 
+
+                    if (!/^\d{6}$/.test(enteredOtp)) { 
+                        alert("Please enter the 6-digit OTP.");
+                        otpInput.focus();
+                        return;
+                    }
+
+                    verifyOtpBtn.disabled = true;
+                    verifyOtpBtn.textContent = 'Verifying...';
+
+                    window.confirmationResult.confirm(enteredOtp)
+                        .then((result) => {
+                            const user = result.user;
+                            console.log("User verified and signed in:", user.phoneNumber);
+                            alert(`Successfully logged in as ${user.phoneNumber}!`);
+                            closeModal('otpVerificationModal');
+                        }).catch((error) => {
+                            console.error("Error verifying OTP:", error);
+                            alert("Invalid OTP or error verifying: " + error.message + "\nPlease try again.");
+                            otpInput.value = '';
+                            otpInput.focus();
+                        }).finally(() => {
+                            verifyOtpBtn.disabled = false;
+                            verifyOtpBtn.textContent = 'Verify & Proceed';
+                        });
+                });
+            }
+
+            // --- PINCODE LOGIC ---
+            if(customerPincodeInput) { 
+                customerPincodeInput.addEventListener('input', function() {
+                    const pincode = this.value;
+                    customerPostOfficeSelect.innerHTML = '<option value="">-- Select Post Office --</option>';
+                    customerDistrictInput.value = ''; customerStateInput.value = '';
+                    pincodeStatusDiv.textContent = ''; pincodeStatusDiv.className = 'pincode-status';
+                    currentPincodeData = null;
+                    customerPostOfficeSelect.disabled = true;
+                    if (pincode.length === 6) fetchPincodeDetails(pincode);
+                    else if (pincode.length > 0) { pincodeStatusDiv.textContent = 'Pincode must be 6 digits.'; pincodeStatusDiv.classList.add('error');}
+                });
+                customerPostOfficeSelect.addEventListener('change', function() {
+                    const selectedPostOfficeName = this.value;
+                    if (currentPincodeData && selectedPostOfficeName) {
+                        const selectedOffice = currentPincodeData.find(office => office.Name === selectedPostOfficeName);
+                        if (selectedOffice) {
+                            customerDistrictInput.value = selectedOffice.District || '';
+                            customerStateInput.value = selectedOffice.State || '';
+                        }
+                    } else {
+                        customerDistrictInput.value = ''; customerStateInput.value = '';
+                    }
+                });
+            }
+            async function fetchPincodeDetails(pincode) {
+                pincodeStatusDiv.textContent = 'Fetching details...'; pincodeStatusDiv.classList.add('loading');
+                const apiUrl = `https://api.postalpincode.in/pincode/${pincode}`;
+                try {
+                    const response = await fetch(apiUrl); const data = await response.json();
+                    if (data && data.length > 0 && data[0].Status === "Success") {
+                        currentPincodeData = data[0].PostOffice;
+                        customerPostOfficeSelect.innerHTML = '<option value="">-- Select Post Office --</option>';
+                        currentPincodeData.forEach(office => {
+                            const option = document.createElement('option');
+                            option.value = office.Name; option.textContent = office.Name;
+                            customerPostOfficeSelect.appendChild(option);
+                        });
+                        customerPostOfficeSelect.disabled = false;
+                        pincodeStatusDiv.textContent = `Found ${currentPincodeData.length} post office(s). Please select one.`;
+                        pincodeStatusDiv.className = 'pincode-status success';
+                    } else {
+                        currentPincodeData = null;
+                        pincodeStatusDiv.textContent = (data && data[0] && data[0].Message) || 'Pincode details not found.';
+                        pincodeStatusDiv.className = 'pincode-status error';
+                    }
+                } catch (error) {
+                    currentPincodeData = null; console.error('Error fetching pincode:', error);
+                    pincodeStatusDiv.textContent = 'Error fetching. Try again.'; pincodeStatusDiv.className = 'pincode-status error';
+                }
+            }
+
+            // --- RENDER CATEGORIES & PRODUCTS ---
+            function renderCategories() {
+                const uniqueCategories = ['All', ...new Set(products.map(p => p.category))];
+                if (!categoriesContainer) return;
+                categoriesContainer.innerHTML = '';
+                uniqueCategories.forEach(category => {
+                    const button = document.createElement('button');
+                    button.classList.add('category-btn'); button.textContent = category;
+                    if (category === 'All') button.classList.add('active');
+                    button.addEventListener('click', () => {
+                        filterProductsByCategory(category);
+                        document.querySelectorAll('#categories-container .category-btn').forEach(btn => btn.classList.remove('active'));
+                        button.classList.add('active');
+                    });
+                    categoriesContainer.appendChild(button);
+                });
+            }
+            function renderProducts(filterCategory = 'All') {
+                if (!productsContainer || !productsSectionTitleEl) return;
+                productsContainer.innerHTML = '';
+                productsSectionTitleEl.textContent = filterCategory === 'All' ? 'All Products' : filterCategory;
+                const filteredProducts = filterCategory === 'All' ? products : products.filter(p => p.category === filterCategory);
+                if (filteredProducts.length === 0) {
+                    productsContainer.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: var(--text-color-secondary); padding: 20px;">No products found.</p>';
+                    return;
+                }
+                let cardBgIndex = 0; 
+                const cardBackgrounds = ['var(--card-bg-1)','var(--card-bg-2)','var(--card-bg-3)','var(--card-bg-4)'];
+                filteredProducts.forEach(product => {
+                    const productCard = document.createElement('div');
+                    productCard.classList.add('product-card');
+                    productCard.style.backgroundColor = cardBackgrounds[cardBgIndex % cardBackgrounds.length];
+                    cardBgIndex++;
+                    productCard.dataset.productId = product.id;
+                    productCard.innerHTML = `
+                        <div class="product-image-container" data-action="view-details">
+                            <img src="${product.image}" alt="${product.name}">
+                            <i class="far fa-heart wishlist-icon" data-action="toggle-wishlist"></i>
+                        </div>
+                        <div class="product-card-content">
+                            <h3 class="product-title" data-action="view-details">${product.name}</h3>
+                            <div class="product-info-bottom">
+                                <p class="product-price">${product.price}</p>
+                                <button class="buy-btn" data-action="view-details">Buy</button>
+                            </div>
+                        </div>`;
+                    productsContainer.appendChild(productCard);
+                });
+            }
+            if(productsContainer) {
+                productsContainer.addEventListener('click', function(event) {
+                    const targetElement = event.target.closest('[data-action]');
+                    if (!targetElement) return;
+                    const action = targetElement.dataset.action;
+                    const card = targetElement.closest('.product-card');
+                    if (action === 'view-details') {
+                        if (card && card.dataset.productId) showProductDetail(parseInt(card.dataset.productId));
+                    } else if (action === 'toggle-wishlist') {
+                        if (targetElement.classList.contains('wishlist-icon')) {
+                             targetElement.classList.toggle('fas'); targetElement.classList.toggle('far');
+                             targetElement.classList.toggle('active');
+                        }
+                    }
+                });
+            }
+            function filterProductsByCategory(category) { renderProducts(category); }
+
+            // --- SHOW PRODUCT DETAIL & ORDER FORM ---
+             function showProductDetail(productId) {
+                const product = products.find(p => p.id === productId); if (!product) return;
+                let colorsHtml = '';
+                if (product.colors && product.colors.length > 0) {
+                    colorsHtml = `<div class="option-group"><span class="option-label">Color:</span><div class="option-buttons">${product.colors.map((color, index) => `<span class="color-dot ${index === 0 ? 'selected' : ''}" style="background-color: ${color.code};" title="${color.name}" data-color="${color.name}"></span>`).join('')}</div></div>`;
+                }
+                let sizesHtml = '';
+                if (product.sizes && product.sizes.length > 0) {
+                    sizesHtml = `<div class="option-group"><span class="option-label">Size:</span><div class="option-buttons">${product.sizes.map((size, index) => `<button class="option-btn ${index === 0 ? 'selected' : ''}" data-size="${size}">${size}</button>`).join('')}</div></div>`;
+                }
+                modalProductInfo.innerHTML = `
+                    <div class="product-detail-image-wrapper"><img src="${product.image}" alt="${product.name}" class="product-detail-image"></div>
+                    <div class="product-detail-content">
+                        <h3 class="detail-title">${product.name}</h3><p class="detail-price">${product.price}</p>
+                        <p class="stock-status"><i class="fas fa-check-circle"></i> Available in Stock</p>
+                        <div class="product-options">${colorsHtml}${sizesHtml}</div>
+                        <h4 class="description-title">Description</h4><p class="description-text">${product.description}</p>
+                    </div>`;
+                orderNowFromDetailBtn.dataset.productId = productId; 
+                openModal('productDetailModal'); 
+            }
+            if(orderNowFromDetailBtn) {
+                orderNowFromDetailBtn.addEventListener('click', (e) => {
+                    const productId = parseInt(e.target.dataset.productId); 
+                    closeModal('productDetailModal'); 
+                    showOrderForm(productId);
+                });
+            }
+            function showOrderForm(productId) {
+                if (!orderForm || !formProductIdInput || !customerPostOfficeSelect || !customerDistrictInput || !customerStateInput || !pincodeStatusDiv) return;
+                formProductIdInput.value = productId; 
+                orderForm.reset(); 
+                
+                if (isLoggedIn && currentUserMobile && customerMobileInput) {
+                    if (currentUserMobile.startsWith('+91') && currentUserMobile.length === 13) {
+                        customerMobileInput.value = currentUserMobile.substring(3);
+                    } else {
+                        customerMobileInput.value = currentUserMobile; 
+                    }
+                }
+
+                customerPostOfficeSelect.innerHTML = '<option value="">-- Select Post Office --</option>';
+                customerDistrictInput.value = ''; customerStateInput.value = '';
+                pincodeStatusDiv.textContent = ''; pincodeStatusDiv.className = 'pincode-status';
+                currentPincodeData = null; customerPostOfficeSelect.disabled = true;
+                openModal('orderFormModal'); 
+            }
+            function handleOrderSubmit(event) {
+                event.preventDefault();
+                if (!formProductIdInput || !customerNameInput || !customerMobileInput || !customerPincodeInput || !customerPostOfficeSelect || !customerDistrictInput || !customerStateInput || !customerVillageLandmarkInput || !customerFullAddressInput) return;
+
+                const productId = parseInt(formProductIdInput.value); const product = products.find(p => p.id === productId);
+                const name = customerNameInput.value.trim(); const mobile = customerMobileInput.value.trim(); 
+                const pincode = customerPincodeInput.value.trim(); const selectedPostOffice = customerPostOfficeSelect.value.trim();
+                const district = customerDistrictInput.value.trim(); const state = customerStateInput.value.trim();
+                const villageLandmark = customerVillageLandmarkInput.value.trim(); const fullAddress = customerFullAddressInput.value.trim();
+
+                if (!name || !mobile || !pincode || !selectedPostOffice || !district || !state || !villageLandmark || !fullAddress) { alert("Please fill all delivery details."); return; }
+                if (!/^\d{10}$/.test(mobile)) { alert("Valid 10-digit mobile needed for delivery."); return; } 
+                if (!/^\d{6}$/.test(pincode)) { alert("Valid 6-digit pincode needed."); return; }
+
+                const newOrder = { 
+                    orderId: Date.now(), productId, productName: product.name, productImage: product.image,
+                    customerDetails: { name, mobile, pincode, postOffice: selectedPostOffice, district, state, villageLandmark, fullAddress },
+                    orderDate: new Date().toLocaleDateString(),
+                    orderedBy: isLoggedIn ? currentUserMobile : 'guest' 
+                };
+                orders.push(newOrder); localStorage.setItem('onlineStoreOrders', JSON.stringify(orders));
+                alert(`Thank you, ${name}! Your order for ${product.name} placed.`);
+                closeModal('orderFormModal'); if (myOrdersModalEl && myOrdersModalEl.style.display === 'block') renderMyOrders();
+            }
+            if (orderForm) {
+                orderForm.addEventListener('submit', handleOrderSubmit);
+            }
+            function renderMyOrders() {
+                if (!ordersListContainer) return;
+                ordersListContainer.innerHTML = ''; 
+                if (orders.length === 0) {
+                    ordersListContainer.innerHTML = '<p class="no-orders">No orders yet.</p>'; 
+                    return;
+                }
+                orders.slice().reverse().forEach(order => { 
+                    const item = document.createElement('div'); item.classList.add('order-item');
+                    const d = order.customerDetails;
+                    let addr = 'N/A';
+                    if (d) {
+                        addr = `${d.fullAddress || ''}${d.villageLandmark ? ', ' + d.villageLandmark : ''}${d.postOffice ? ', ' + d.postOffice : ''}${d.district ? ', ' + d.district : ''}${d.state ? ', ' + d.state : ''}${d.pincode ? ' - ' + d.pincode : ''}`;
+                    } else if (order.customerAddress) { 
+                        addr = order.customerAddress;
+                    }
+                    item.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            <img src="${order.productImage}" alt="${order.productName}" style="width:60px; height:60px; object-fit:contain; border-radius:8px;">
+                            <div>
+                                <h4 style="margin-bottom:5px; font-size:1rem;">${order.productName}</h4>
+                                <p style="font-size:0.8rem; color:var(--text-color-secondary);">ID: ${order.orderId}</p>
+                                <p style="font-size:0.8rem; color:var(--text-color-secondary);">To: ${d ? d.name : (order.customerName || 'N/A')}</p>
+                                <p style="font-size:0.8rem; color:var(--text-color-secondary);">Address: ${addr}</p>
+                                ${order.orderedBy && order.orderedBy !== 'guest' ? `<p style="font-size:0.75rem; color:var(--accent-color);">User: ${order.orderedBy}</p>` : ''}
+                            </div>
+                        </div>`;
+                    ordersListContainer.appendChild(item);
+                });
+            }
+
+            // --- MODAL open/close functions ---
+            window.openModal = (id) => {
+                const modalToOpen = document.getElementById(id);
+                if (!modalToOpen) return;
+                modalToOpen.style.display = 'block';
+                bodyElement.classList.add('modal-open');
+
+                if (id === 'productDetailModal' || id === 'signupMobileModal' || id === 'otpVerificationModal' ) { 
+                    bottomNavElement.classList.add('is-hidden');
+                    bodyElement.classList.add('no-bottom-padding');
+                } else {
+                    bottomNavElement.classList.remove('is-hidden');
+                    bodyElement.classList.remove('no-bottom-padding');
+                }
+            };
+            window.closeModal = (id, calledInternally = false) => {
+                const modalToClose = document.getElementById(id);
+                if (!modalToClose) return;
+                modalToClose.style.display = 'none';
+                
+                if (!calledInternally) {
+                    const anyModalOpen = Array.from(document.querySelectorAll('.modal')).some(m => m.style.display === 'block');
+                    if (!anyModalOpen) {
+                        bodyElement.classList.remove('modal-open');
+                    }
+                }
+                
+                let shouldShowNav = true;
+                const fullScreenModals = ['productDetailModal', 'signupMobileModal', 'otpVerificationModal'];
+                if (fullScreenModals.some(modalId => {
+                    const modalEl = document.getElementById(modalId);
+                    return modalEl && modalEl.style.display === 'block';
+                })) {
+                    shouldShowNav = false;
+                }
+
+                if(shouldShowNav){
+                    bottomNavElement.classList.remove('is-hidden');
+                    bodyElement.classList.remove('no-bottom-padding');
+                } else {
+                     bottomNavElement.classList.add('is-hidden'); 
+                     bodyElement.classList.add('no-bottom-padding');
+                }
+            };
+            window.onclick = (e) => { 
+                if (e.target.classList.contains('modal') && e.target.id) {
+                    closeModal(e.target.id); 
+                }
+            }
+            const closeAllModals = (exceptIds = []) => { 
+                document.querySelectorAll('.modal').forEach(m => {
+                    if (m.style.display === 'block' && !exceptIds.includes(m.id)) { 
+                        closeModal(m.id, true); 
+                    }
+                }); 
+                const anyFullScreenModalOpen = ['productDetailModal', 'signupMobileModal', 'otpVerificationModal'].some(id => {
+                    const modalEl = document.getElementById(id);
+                    return modalEl && modalEl.style.display === 'block';
+                });
+
+                if (!anyFullScreenModalOpen) {
+                    bodyElement.classList.remove('modal-open'); 
+                    bottomNavElement.classList.remove('is-hidden');
+                    bodyElement.classList.remove('no-bottom-padding');
+                } else {
+                    bodyElement.classList.add('modal-open');
+                }
+            }
+            const updateBottomNav = (activeId) => {
+                 document.querySelectorAll('.bottom-nav-item').forEach(i => {
+                    i.classList.remove('active');
+                    i.removeAttribute('aria-current'); 
+                 });
+                 const activeNavItem = document.getElementById(activeId);
+                 if(activeNavItem) {
+                    activeNavItem.classList.add('active');
+                    activeNavItem.setAttribute('aria-current', 'page'); 
+                 }
+            }
+
+            // --- NAVIGATION EVENT LISTENERS ---
+            const showMyOrdersView = () => { 
+                closeAllModals(['myOrdersModal']); 
+                renderMyOrders(); 
+                openModal('myOrdersModal'); 
+                updateBottomNav('navOrders'); 
+            }
+            const showSettingsView = () => { 
+                closeAllModals(['settingsModal']); 
+                openModal('settingsModal');
+                updateBottomNav('navSettings');
+            }
+
+            if(headerCartBtn) headerCartBtn.addEventListener('click', showMyOrdersView);
+            
+            if(navOrders) navOrders.addEventListener('click', (e) => { 
+                e.preventDefault(); 
+                showMyOrdersView(); 
+            });
+            
+            if(navHome) navHome.addEventListener('click', (e) => {
+                e.preventDefault();
+                closeAllModals(); 
+                updateBottomNav('navHome');
+                document.querySelectorAll('#categories-container .category-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.textContent === 'All') {
+                        btn.classList.add('active');
+                    }
+                });
+                renderProducts('All');
+                if(mainSectionTitleEl) mainSectionTitleEl.textContent = 'Recommendations';
+            });
+
+            if(navSettings) navSettings.addEventListener('click', (e) => { 
+                e.preventDefault(); 
+                showSettingsView(); 
+            });
+            
+            document.getElementById('settingsShareBtn')?.addEventListener('click', () => alert('Share App clicked!'));
+            document.getElementById('settingsContactBtn')?.addEventListener('click', () => alert('Contact Us clicked!'));
+            document.getElementById('settingsPrivacyBtn')?.addEventListener('click', () => alert('Privacy Policy clicked!'));
+            
+            // Initial Renders
+            renderCategories(); 
+            renderProducts(); 
+            updateBottomNav('navHome');
+            // Firebase onAuthStateChanged will handle the initial auth UI update.
+        });
+    </script>
+</body>
+</html>
